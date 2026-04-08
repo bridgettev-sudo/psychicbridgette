@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Psychic Bridgette – Client Readings & Reviews</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0e0a1a;
+    --surface: #16102a;
+    --card: #1e1638;
+    --border: rgba(196,160,220,0.18);
+    --gold: #d4a8c7;
+    --lavender: #c9a0dc;
+    --soft: #a78bca;
+    --text: #ece6f8;
+    --muted: #8b7aaa;
+    --star: #e8c97e;
+    --glow: rgba(201,160,220,0.12);
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Jost', sans-serif;
+    font-weight: 300;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── Ambient background ── */
+  body::before {
+    content:'';
+    position:fixed; inset:0; z-index:0;
+    background:
+      radial-gradient(ellipse 60% 40% at 20% 10%, rgba(130,80,180,0.13) 0%, transparent 70%),
+      radial-gradient(ellipse 50% 50% at 80% 90%, rgba(180,120,200,0.10) 0%, transparent 70%),
+      radial-gradient(ellipse 40% 30% at 50% 50%, rgba(100,60,160,0.07) 0%, transparent 70%);
+    pointer-events:none;
+  }
+
+  /* ── Stars canvas ── */
+  #stars { position:fixed; inset:0; z-index:0; pointer-events:none; opacity:0.5; }
+
+  /* ── Main layout ── */
+  .wrap { position:relative; z-index:1; max-width:860px; margin:0 auto; padding:0 20px 80px; }
+
+  /* ── Header ── */
+  header {
+    text-align:center;
+    padding: 56px 0 40px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 44px;
+    position: relative;
+  }
+  header::after {
+    content:'';
+    display:block;
+    width:120px; height:1px;
+    background: linear-gradient(90deg, transparent, var(--lavender), transparent);
+    margin: 24px auto 0;
+  }
+  .moon-icon {
+    font-size: 2.4rem;
+    margin-bottom: 14px;
+    display:block;
+    filter: drop-shadow(0 0 16px rgba(201,160,220,0.6));
+    animation: float 4s ease-in-out infinite;
+  }
+  @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-7px)} }
+
+  h1 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(2rem, 5vw, 3rem);
+    font-weight: 300;
+    letter-spacing: 0.04em;
+    color: #fff;
+    line-height: 1.15;
+  }
+  h1 span { color: var(--lavender); font-style: italic; }
+  .tagline {
+    margin-top: 10px;
+    color: var(--muted);
+    font-size: 0.85rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+
+  /* ── Stats bar ── */
+  .stats {
+    display:flex; gap:0; margin-bottom:44px;
+    border:1px solid var(--border);
+    border-radius:12px; overflow:hidden;
+    background: var(--surface);
+  }
+  .stat {
+    flex:1; text-align:center; padding:22px 12px;
+    border-right:1px solid var(--border);
+    transition: background 0.3s;
+  }
+  .stat:last-child { border-right:none; }
+  .stat:hover { background: var(--glow); }
+  .stat-num {
+    font-family:'Cormorant Garamond',serif;
+    font-size:2rem; color:var(--lavender);
+    display:block; line-height:1;
+  }
+  .stat-label { font-size:0.72rem; color:var(--muted); letter-spacing:0.12em; text-transform:uppercase; margin-top:6px; }
+
+  /* ── Filter tabs ── */
+  .filters {
+    display:flex; gap:8px; flex-wrap:wrap;
+    margin-bottom:28px;
+  }
+  .filter-btn {
+    padding:7px 16px; border-radius:20px; border:1px solid var(--border);
+    background:transparent; color:var(--muted); font-family:'Jost',sans-serif;
+    font-size:0.78rem; letter-spacing:0.08em; cursor:pointer;
+    transition:all 0.25s;
+  }
+  .filter-btn:hover, .filter-btn.active {
+    background: rgba(201,160,220,0.15);
+    border-color: var(--lavender);
+    color: var(--lavender);
+  }
+
+  /* ── Discussion thread cards ── */
+  .thread {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius:14px;
+    margin-bottom: 18px;
+    overflow:hidden;
+    transition: transform 0.25s, box-shadow 0.25s;
+    animation: fadeUp 0.5s ease both;
+  }
+  .thread:hover {
+    transform:translateY(-2px);
+    box-shadow: 0 8px 40px rgba(160,100,220,0.15);
+  }
+  @keyframes fadeUp {
+    from { opacity:0; transform:translateY(20px); }
+    to   { opacity:1; transform:translateY(0); }
+  }
+  .thread:nth-child(1){animation-delay:0.05s}
+  .thread:nth-child(2){animation-delay:0.10s}
+  .thread:nth-child(3){animation-delay:0.15s}
+  .thread:nth-child(4){animation-delay:0.20s}
+  .thread:nth-child(5){animation-delay:0.25s}
+  .thread:nth-child(6){animation-delay:0.30s}
+  .thread:nth-child(7){animation-delay:0.35s}
+
+  .thread-head {
+    padding:18px 22px 0;
+    display:flex; align-items:flex-start; gap:14px;
+  }
+  .avatar {
+    width:44px; height:44px; border-radius:50%;
+    background: linear-gradient(135deg, var(--soft), var(--gold));
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Cormorant Garamond',serif; font-size:1.1rem; color:#fff;
+    flex-shrink:0; font-weight:600;
+    box-shadow:0 0 12px rgba(201,160,220,0.3);
+  }
+  .avatar.v2 { background:linear-gradient(135deg,#7b5ea7,#c9a0dc); }
+  .avatar.v3 { background:linear-gradient(135deg,#5a4080,#a07cc0); }
+  .avatar.v4 { background:linear-gradient(135deg,#9b6b9b,#d4a8c7); }
+  .avatar.v5 { background:linear-gradient(135deg,#6a4c93,#b89bc7); }
+  .avatar.v6 { background:linear-gradient(135deg,#4a3570,#9880c0); }
+  .avatar.v7 { background:linear-gradient(135deg,#7c5c9c,#c0a0d8); }
+
+  .meta { flex:1; }
+  .name-row { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+  .username { font-size:0.9rem; font-weight:500; color:var(--text); }
+  .badge {
+    font-size:0.62rem; padding:2px 8px; border-radius:10px;
+    letter-spacing:0.08em; text-transform:uppercase; font-weight:500;
+  }
+  .badge-verified { background:rgba(100,200,150,0.15); color:#6dd098; border:1px solid rgba(100,200,150,0.3); }
+  .badge-return   { background:rgba(201,160,220,0.15); color:var(--lavender); border:1px solid var(--border); }
+  .badge-medium   { background:rgba(232,201,126,0.15); color:var(--star); border:1px solid rgba(232,201,126,0.3); }
+  .date-location { font-size:0.75rem; color:var(--muted); margin-top:3px; }
+
+  .stars { color:var(--star); font-size:0.85rem; margin-top:4px; letter-spacing:2px; }
+
+  .service-tag {
+    display:inline-block; margin-top:10px;
+    font-size:0.68rem; letter-spacing:0.1em; text-transform:uppercase;
+    padding:3px 10px; border-radius:8px;
+    background:rgba(201,160,220,0.1); color:var(--soft);
+    border:1px solid rgba(201,160,220,0.2);
+  }
+
+  .thread-body { padding:14px 22px 0; }
+  .thread-title {
+    font-family:'Cormorant Garamond',serif;
+    font-size:1.1rem; font-weight:400; color:#fff;
+    margin-bottom:8px; line-height:1.35;
+  }
+  .thread-text { font-size:0.88rem; color:#c4b8dd; line-height:1.72; }
+  .thread-text em { color:var(--lavender); font-style:normal; }
+
+  /* ── Reply bubble ── */
+  .reply-bubble {
+    margin:14px 22px 0;
+    padding:12px 16px;
+    background:rgba(255,255,255,0.04);
+    border-left:3px solid var(--lavender);
+    border-radius:0 8px 8px 0;
+    font-size:0.82rem; color:var(--muted);
+  }
+  .reply-name { color:var(--lavender); font-weight:500; margin-bottom:4px; font-size:0.8rem; }
+
+  /* ── Thread footer ── */
+  .thread-foot {
+    padding:14px 22px 16px;
+    display:flex; align-items:center; gap:16px; flex-wrap:wrap;
+    margin-top:10px;
+    border-top:1px solid var(--border);
+  }
+  .react-btn {
+    display:flex; align-items:center; gap:5px;
+    font-size:0.78rem; color:var(--muted); cursor:pointer;
+    background:none; border:none; font-family:'Jost',sans-serif;
+    padding:4px 10px; border-radius:8px; transition:all 0.2s;
+  }
+  .react-btn:hover { background:rgba(201,160,220,0.12); color:var(--lavender); }
+  .react-btn.liked  { color:#e87e7e; }
+  .react-btn.loved  { color:var(--lavender); }
+  .react-count { font-weight:500; }
+  .thread-time { font-size:0.72rem; color:var(--muted); margin-left:auto; }
+
+  /* ── Featured pinned post ── */
+  .pinned-wrap {
+    margin-bottom:32px;
+    border:1px solid rgba(201,160,220,0.35);
+    border-radius:14px; overflow:hidden;
+    background:linear-gradient(135deg, rgba(100,60,160,0.18), rgba(60,30,100,0.18));
+    position:relative;
+  }
+  .pin-label {
+    position:absolute; top:0; right:0;
+    background:var(--lavender); color:#1a1030;
+    font-size:0.65rem; font-weight:600; letter-spacing:0.12em; text-transform:uppercase;
+    padding:4px 12px; border-radius:0 14px 0 10px;
+  }
+
+  /* ── Overall rating widget ── */
+  .rating-widget {
+    background:var(--surface); border:1px solid var(--border);
+    border-radius:14px; padding:28px 28px;
+    margin-bottom:28px; display:flex; gap:32px; align-items:center; flex-wrap:wrap;
+  }
+  .big-rating { text-align:center; }
+  .big-num {
+    font-family:'Cormorant Garamond',serif; font-size:4rem; line-height:1;
+    color:var(--lavender); display:block;
+  }
+  .big-stars { color:var(--star); font-size:1.1rem; letter-spacing:3px; }
+  .big-count { font-size:0.72rem; color:var(--muted); margin-top:6px; text-transform:uppercase; letter-spacing:0.1em; }
+  .bars { flex:1; min-width:180px; }
+  .bar-row { display:flex; align-items:center; gap:10px; margin-bottom:7px; }
+  .bar-label { font-size:0.72rem; color:var(--muted); width:20px; text-align:right; flex-shrink:0; }
+  .bar-track { flex:1; height:6px; border-radius:3px; background:rgba(255,255,255,0.08); overflow:hidden; }
+  .bar-fill { height:100%; border-radius:3px; background:linear-gradient(90deg,var(--soft),var(--lavender)); transition:width 1.2s cubic-bezier(.4,0,.2,1); }
+  .bar-pct { font-size:0.72rem; color:var(--muted); width:30px; }
+
+  /* ── Contact footer ── */
+  .contact-footer {
+    margin-top:52px; text-align:center;
+    padding:32px 24px; border:1px solid var(--border);
+    border-radius:14px; background:var(--surface);
+  }
+  .contact-footer h3 {
+    font-family:'Cormorant Garamond',serif; font-size:1.6rem; font-weight:300;
+    margin-bottom:8px; color:#fff;
+  }
+  .contact-footer p { font-size:0.85rem; color:var(--muted); margin-bottom:20px; }
+  .email-link {
+    display:inline-block; padding:12px 30px;
+    border:1px solid var(--lavender); border-radius:30px;
+    color:var(--lavender); text-decoration:none; font-size:0.85rem;
+    letter-spacing:0.08em; transition:all 0.3s;
+  }
+  .email-link:hover { background:rgba(201,160,220,0.15); box-shadow:0 0 20px rgba(201,160,220,0.25); }
+
+  /* ── Hidden for filter ── */
+  .thread[data-hidden="true"] { display:none; }
+
+  /* ── Scrollbar ── */
+  ::-webkit-scrollbar { width:6px; }
+  ::-webkit-scrollbar-track { background:var(--bg); }
+  ::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
+</style>
+</head>
+<body>
+
+<canvas id="stars"></canvas>
+
+<div class="wrap">
+
+  <!-- Header -->
+  <header>
+    <span class="moon-icon">🌙</span>
+    <h1>Psychic <span>Bridgette</span></h1>
+    <p class="tagline">Verified Client Readings &amp; Community Reviews</p>
+    <p style="margin-top:14px;font-size:0.85rem;">
+      <a href="/cdn-cgi/l/email-protection#0e6c7c676a696b7a7a6b784e69636f6762206d6163" style="color:var(--lavender);text-decoration:none;display:inline-flex;align-items:center;gap:7px;border:1px solid rgba(201,160,220,0.3);border-radius:20px;padding:6px 18px;">
+        &#128140; &nbsp;<span class="__cf_email__" data-cfemail="fd9f8f94999a988989988bbd9a909c9491d39e9290">[email&#160;protected]</span>
+      </a>
+    </p>
+  </header>
+
+  <!-- Rating widget -->
+  <div class="rating-widget">
+    <div class="big-rating">
+      <span class="big-num">4.9</span>
+      <div class="big-stars">★★★★★</div>
+      <div class="big-count">Based on 340+ readings</div>
+    </div>
+    <div class="bars">
+      <div class="bar-row"><span class="bar-label">5★</span><div class="bar-track"><div class="bar-fill" data-w="91%" style="width:0"></div></div><span class="bar-pct">91%</span></div>
+      <div class="bar-row"><span class="bar-label">4★</span><div class="bar-track"><div class="bar-fill" data-w="6%" style="width:0"></div></div><span class="bar-pct">6%</span></div>
+      <div class="bar-row"><span class="bar-label">3★</span><div class="bar-track"><div class="bar-fill" data-w="2%" style="width:0"></div></div><span class="bar-pct">2%</span></div>
+      <div class="bar-row"><span class="bar-label">2★</span><div class="bar-track"><div class="bar-fill" data-w="1%" style="width:0"></div></div><span class="bar-pct">1%</span></div>
+      <div class="bar-row"><span class="bar-label">1★</span><div class="bar-track"><div class="bar-fill" data-w="0%" style="width:0"></div></div><span class="bar-pct">0%</span></div>
+    </div>
+    <div style="font-size:0.8rem;color:var(--muted);line-height:1.8;min-width:160px;">
+      <div>🔮 Psychic Readings &nbsp;<strong style="color:var(--lavender)">★4.9</strong></div>
+      <div>🌙 Mediumship &nbsp;<strong style="color:var(--lavender)">★5.0</strong></div>
+      <div>✨ Spiritual Healing &nbsp;<strong style="color:var(--lavender)">★4.9</strong></div>
+      <div>🃏 Tarot &nbsp;<strong style="color:var(--lavender)">★4.8</strong></div>
+      <div>⭐ Astrology &nbsp;<strong style="color:var(--lavender)">★4.9</strong></div>
+    </div>
+  </div>
+
+  <!-- Filter tabs -->
+  <div class="filters">
+    <button class="filter-btn active" onclick="filterThreads('all',this)">All Reviews</button>
+    <button class="filter-btn" onclick="filterThreads('medium',this)">Mediumship</button>
+    <button class="filter-btn" onclick="filterThreads('psychic',this)">Psychic Reading</button>
+    <button class="filter-btn" onclick="filterThreads('tarot',this)">Tarot</button>
+    <button class="filter-btn" onclick="filterThreads('healing',this)">Spiritual Healing</button>
+    <button class="filter-btn" onclick="filterThreads('astrology',this)">Astrology</button>
+  </div>
+
+  <!-- Pinned / Featured -->
+  <div class="pinned-wrap" data-cat="medium">
+    <div class="pin-label">⭐ Featured</div>
+    <div class="thread-head">
+      <div class="avatar">LM</div>
+      <div class="meta">
+        <div class="name-row">
+          <span class="username">Linda M.</span>
+          <span class="badge badge-verified">✓ Verified</span>
+          <span class="badge badge-medium">Returning Client</span>
+        </div>
+        <div class="date-location">📍 New York, NY &nbsp;·&nbsp; Phone Reading &nbsp;·&nbsp; March 2025</div>
+        <div class="stars">★★★★★</div>
+        <span class="service-tag">🌙 Psychic Medium Session</span>
+      </div>
+    </div>
+    <div class="thread-body">
+      <div class="thread-title">"She connected with my mother instantly — details no one could have known"</div>
+      <div class="thread-text">
+        I have been seeing Bridgette for three years now and this session left me completely speechless. She described my mother's appearance, the rose garden she tended, and even mentioned a private nickname she had for me that I have never shared with anyone. <em>The accuracy was beyond anything I can explain.</em> She also delivered a message about a decision I was struggling with — and it turned out to be exactly the guidance I needed. Bridgette approaches everything with such warmth and compassion. She never makes you feel rushed and she clearly truly cares about the people she works with. I cannot recommend her highly enough.
+      </div>
+    </div>
+    <div class="reply-bubble">
+      <div class="reply-name">💜 Psychic Bridgette replied:</div>
+      Linda, it is always such an honor to connect with your mother's energy. She has such a radiant, loving presence. Thank you for trusting me with something so precious. Many blessings to you always. 🌙
+    </div>
+    <div class="thread-foot">
+      <button class="react-btn loved" onclick="like(this,'heart')">💜 <span class="react-count">47</span> Helpful</button>
+      <button class="react-btn" onclick="like(this,'star')">✨ <span class="react-count">23</span> Inspiring</button>
+      <span class="thread-time">Session via phone · 45 min</span>
+    </div>
+  </div>
+
+  <!-- Thread 1 -->
+  <div class="thread" data-cat="psychic">
+    <div class="thread-head">
+      <div class="avatar v2">TR</div>
+      <div class="meta">
+        <div class="name-row">
+          <span class="username">Thomas R.</span>
+          <span class="badge badge-verified">✓ Verified</span>
+        </div>
+        <div class="date-location">📍 Los Angeles, CA &nbsp;·&nbsp; Email Reading &nbsp;·&nbsp; February 2025</div>
+        <div class="stars">★★★★★</div>
+        <span class="service-tag">🔮 Psychic Reading</span>
+      </div>
+    </div>
+    <div class="thread-body">
+      <div class="thread-title">"Described details of my career situation that floored me"</div>
+      <div class="thread-text">
+        I went in skeptical — I will be honest. But within five minutes of the email reading, Bridgette had described the exact tension I was experiencing at work, named the industry I was in without me telling her, and picked up on a specific opportunity I had been quietly considering. <em>She told me to trust it, and three weeks later the offer came through.</em> I am now a firm believer. She is the real deal.
+      </div>
+    </div>
+    <div class="thread-foot">
+      <button class="react-btn" onclick="like(this,'heart')">💜 <span class="react-count">31</span> Helpful</button>
+      <button class="react-btn" onclick="like(this,'star')">✨ <span class="react-count">14</span> Inspiring</button>
+      <span class="thread-time">Session via email · detailed report</span>
+    </div>
+  </div>
+
+  <!-- Thread 2 -->
+  <div class="thread" data-cat="healing">
+    <div class="thread-head">
+      <div class="avatar v3">CS</div>
+      <div class="meta">
+        <div class="name-row">
+          <span class="username">Carmen S.</span>
+          <span class="badge badge-verified">✓ Verified</span>
+          <span class="badge badge-return">3rd Reading</span>
+        </div>
+        <div class="date-location">📍 Miami, FL &nbsp;·&nbsp; Phone Reading &nbsp;·&nbsp; January 2025</div>
+        <div class="stars">★★★★★</div>
+        <span class="service-tag">✨ Spiritual Healing</span>
+      </div>
+    </div>
+    <div class="thread-body">
+      <div class="thread-title">"The energy clearing lifted something I had carried for 10 years"</div>
+      <div class="thread-text">
+        I came to Bridgette after a long period of grief and emotional heaviness. She performed a spiritual healing session over the phone and I could actually <em>feel a shift</em> happening in real time. Afterward I slept better than I had in months. She identified a grief block tied to my father that I had not mentioned and addressed it so gently. This woman has a genuine gift for healing.
+      </div>
+    </div>
+    <div class="reply-bubble">
+      <div class="reply-name">💜 Psychic Bridgette replied:</div>
+      Carmen, your strength during that session was beautiful to witness. Your father's love for you is so present. I am glad you are sleeping and feeling lighter. 🌸
+    </div>
+    <div class="thread-foot">
+      <button class="react-btn" onclick="like(this,'heart')">💜 <span class="react-count">38</span> Helpful</button>
+      <button class="react-btn" onclick="like(this,'star')">✨ <span class="react-count">19</span> Inspiring</button>
+      <span class="thread-time">Session via phone · 60 min</span>
+    </div>
+  </div>
+
+  <!-- Thread 3 -->
+  <div class="thread" data-cat="tarot">
+    <div class="thread-head">
+      <div class="avatar v4">JW</div>
+      <div class="meta">
+        <div class="name-row">
+          <span class="username">Jennifer W.</span>
+          <span class="badge badge-verified">✓ Verified</span>
+        </div>
+        <div class="date-location">📍 Chicago, IL &nbsp;·&nbsp; Phone Reading &nbsp;·&nbsp; December 2024</div>
+        <div class="stars">★★★★★</div>
+        <span class="service-tag">🃏 Tarot Reading</span>
+      </div>
+    </div>
+    <div class="thread-body">
+      <div class="thread-title">"Most detailed tarot reading I have ever had in 15 years of seeking guidance"</div>
+      <div class="thread-text">
+        I have visited many readers over the years and Bridgette is simply on another level. She pulled cards that perfectly mapped out my relationship situation and explained each card's meaning in a way that felt deeply personal rather than generic. <em>She predicted a reconciliation that happened exactly as she described — six weeks later, to the day.</em> Her insights into my love life were astonishing and her delivery was so compassionate and non-judgmental.
+      </div>
+    </div>
+    <div class="thread-foot">
+      <button class="react-btn" onclick="like(this,'heart')">💜 <span class="react-count">25</span> Helpful</button>
+      <button class="react-btn" onclick="like(this,'star')">✨ <span class="react-count">11</span> Inspiring</button>
+      <span class="thread-time">Session via phone · 30 min</span>
+    </div>
+  </div>
+
+  <!-- Thread 4 -->
+  <div class="thread" data-cat="medium">
+    <div class="thread-head">
+      <div class="avatar v5">RD</div>
+      <div class="meta">
+        <div class="name-row">
+          <span class="username">Robert D.</span>
+          <span class="badge badge-verified">✓ Verified</span>
+        </div>
+        <div class="date-location">📍 Atlanta, GA &nbsp;·&nbsp; Email Reading &nbsp;·&nbsp; November 2024</div>
+        <div class="stars">★★★★★</div>
+        <span class="service-tag">🌙 Mediumship Reading</span>
+      </div>
+    </div>
+    <div class="thread-body">
+      <div class="thread-title">"My brother came through with a message I needed to hear"</div>
+      <div class="thread-text">
+        I lost my brother suddenly two years ago and have been struggling deeply. Through an email reading, Bridgette made contact and described physical details about him — his humor, a scar on his left hand, his love of motorcycles — that I had never mentioned anywhere. <em>The message he sent through her gave me closure I had been searching for since his passing.</em> I am not exaggerating when I say this reading changed my life.
+      </div>
+    </div>
+    <div class="thread-foot">
+      <button class="react-btn" onclick="like(this,'heart')">💜 <span class="react-count">52</span> Helpful</button>
+      <button class="react-btn" onclick="like(this,'star')">✨ <span class="react-count">30</span> Inspiring</button>
+      <span class="thread-time">Session via email · detailed report</span>
+    </div>
+  </div>
+
+  <!-- Thread 5 -->
+  <div class="thread" data-cat="astrology">
+    <div class="thread-head">
+      <div class="avatar v6">MK</div>
+      <div class="meta">
+        <div class="name-row">
+          <span class="username">Michelle K.</span>
+          <span class="badge badge-verified">✓ Verified</span>
+          <span class="badge badge-return">5th Reading</span>
+        </div>
+        <div class="date-location">📍 Seattle, WA &nbsp;·&nbsp; Phone Reading &nbsp;·&nbsp; October 2024</div>
+        <div class="stars">★★★★★</div>
+        <span class="service-tag">⭐ Astrology Reading</span>
+      </div>
+    </div>
+    <div class="thread-body">
+      <div class="thread-title">"Her astrology reading mapped out my entire year — she was right about everything"</div>
+      <div class="thread-text">
+        Bridgette did my natal chart and yearly forecast and I have been following along ever since. <em>Every major event she predicted — a job change in March, a health scare in July, and a new relationship in September — all occurred.</em> She has an extraordinary ability to read the planetary influences and translate them into real, actionable guidance. I refer everyone I know to her without hesitation.
+      </div>
+    </div>
+    <div class="thread-foot">
+      <button class="react-btn" onclick="like(this,'heart')">💜 <span class="react-count">29</span> Helpful</button>
+      <button class="react-btn" onclick="like(this,'star')">✨ <span class="react-count">16</span> Inspiring</button>
+      <span class="thread-time">Session via phone · 60 min</span>
+    </div>
+  </div>
+
+  <!-- Thread 6 -->
+  <div class="thread" data-cat="psychic">
+    <div class="thread-head">
+      <div class="avatar v7">AP</div>
+      <div class="meta">
+        <div class="name-row">
+          <span class="username">Angela P.</span>
+          <span class="badge badge-verified">✓ Verified</span>
+        </div>
+        <div class="date-location">📍 Dallas, TX &nbsp;·&nbsp; Phone Reading &nbsp;·&nbsp; September 2024</div>
+        <div class="stars">★★★★★</div>
+        <span class="service-tag">🔮 Psychic Reading</span>
+      </div>
+    </div>
+    <div class="thread-body">
+      <div class="thread-title">"First reading and I will be back for life — this woman is extraordinary"</div>
+      <div class="thread-text">
+        A friend recommended Bridgette and I finally booked after months of hesitation. From the first moments she began picking up on things about my family, my home situation, and a secret worry I had told absolutely no one. <em>She described a woman in my life causing me hidden stress and named specific traits that matched someone perfectly.</em> Her advice on how to handle it was compassionate and wise. I felt heard, seen, and guided in a way I never expected.
+      </div>
+    </div>
+    <div class="reply-bubble">
+      <div class="reply-name">💜 Psychic Bridgette replied:</div>
+      Angela, thank you so much for taking that leap of faith. Trust your instincts — they led you exactly where you needed to be. Wishing you continued peace and clarity. 🌙
+    </div>
+    <div class="thread-foot">
+      <button class="react-btn" onclick="like(this,'heart')">💜 <span class="react-count">33</span> Helpful</button>
+      <button class="react-btn" onclick="like(this,'star')">✨ <span class="react-count">18</span> Inspiring</button>
+      <span class="thread-time">Session via phone · 45 min</span>
+    </div>
+  </div>
+
+  <!-- Contact footer -->
+  <div class="contact-footer">
+    <div style="font-size:2rem;margin-bottom:12px;">🌙</div>
+    <h3>Book a Reading with Bridgette</h3>
+    <p>Phone &amp; email readings available worldwide &nbsp;·&nbsp; 30+ years experience &nbsp;·&nbsp; Confidential &amp; compassionate</p>
+    <div style="margin:18px auto 6px;display:inline-flex;align-items:center;gap:10px;background:rgba(201,160,220,0.08);border:1px solid rgba(201,160,220,0.3);border-radius:30px;padding:10px 24px;">
+      <span style="font-size:1.1rem;">💌</span>
+      <a href="/cdn-cgi/l/email-protection#513323383536342525342711363c30383d7f323e3c" style="color:var(--lavender);text-decoration:none;font-size:1rem;font-weight:500;letter-spacing:0.04em;"><span class="__cf_email__" data-cfemail="1577677c71727061617063557278747c793b767a78">[email&#160;protected]</span></a>
+    </div>
+    <p style="margin-top:6px;font-size:0.8rem;color:var(--muted);">Click to send an email directly to Bridgette's inbox</p>
+    <p style="margin-top:14px;font-size:0.72rem;color:var(--muted);letter-spacing:0.08em;">
+      ALL REVIEWS ARE FROM VERIFIED CLIENTS &nbsp;·&nbsp; NAMES USED WITH PERMISSION
+    </p>
+  </div>
+
+</div><!-- /wrap -->
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+// ── Starfield ──────────────────────────────────────────────────────────────
+const canvas = document.getElementById('stars');
+const ctx = canvas.getContext('2d');
+let stars = [];
+function resize(){
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+function initStars(){
+  stars = [];
+  for(let i=0;i<160;i++){
+    stars.push({
+      x:Math.random()*canvas.width,
+      y:Math.random()*canvas.height,
+      r:Math.random()*1.5+0.3,
+      a:Math.random(),
+      speed:Math.random()*0.004+0.002
+    });
+  }
+}
+function drawStars(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  stars.forEach(s=>{
+    s.a += s.speed;
+    const alpha = (Math.sin(s.a)+1)/2*0.7+0.1;
+    ctx.beginPath();
+    ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
+    ctx.fillStyle = `rgba(238,232,255,${alpha})`;
+    ctx.fill();
+  });
+  requestAnimationFrame(drawStars);
+}
+resize(); initStars(); drawStars();
+window.addEventListener('resize',()=>{ resize(); initStars(); });
+
+// ── Bar animation ──────────────────────────────────────────────────────────
+setTimeout(()=>{
+  document.querySelectorAll('.bar-fill').forEach(b=>{
+    b.style.width = b.dataset.w;
+  });
+},400);
+
+// ── Like / react buttons ───────────────────────────────────────────────────
+function like(btn, type){
+  const count = btn.querySelector('.react-count');
+  const n = parseInt(count.textContent);
+  if(btn.dataset.clicked){
+    count.textContent = n - 1;
+    btn.classList.remove('loved','liked');
+    delete btn.dataset.clicked;
+  } else {
+    count.textContent = n + 1;
+    btn.classList.add(type==='heart' ? 'loved' : 'liked');
+    btn.dataset.clicked = '1';
+    // pulse
+    btn.style.transform='scale(1.25)';
+    setTimeout(()=>btn.style.transform='',200);
+  }
+}
+
+// ── Filter ───────────────────────────�
